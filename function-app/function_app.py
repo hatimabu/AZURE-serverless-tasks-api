@@ -5,7 +5,11 @@ from azure.cosmos import CosmosClient
 import os
 import uuid
 
-def main(req: func.HttpRequest) -> func.HttpResponse:
+app = func.FunctionApp()
+
+@app.function_name(name="CreateTask")
+@app.route(route="tasks", methods=["POST"], auth_level=func.AuthLevel.ANONYMOUS)
+def create_task(req: func.HttpRequest) -> func.HttpResponse:
     logging.info("Processing CreateTask request")
 
     try:

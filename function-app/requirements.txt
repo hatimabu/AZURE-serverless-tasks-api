@@ -1,5 +1,8 @@
 # Uncomment to enable Azure Monitor OpenTelemetry
-# Ref: aka.ms/functions-azure-monitor-python 
-# azure-monitor-opentelemetry 
-azure-cosmos
-azure-functions
+# Ref: aka.ms/functions-azure-monitor-python
+# azure-monitor-opentelemetry
+azure-cosmos>=4.7.0
+azure-functions>=1.19.0
+# grpcio version conflicts with Azure Functions Core Tools
+# Let Azure Functions manage gRPC dependencies
+# grpcio>=1.60.0,<2.0.0
