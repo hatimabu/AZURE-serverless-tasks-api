@@ -1,27 +1,55 @@
-import azure.functions as func
-import datetime
 import json
 import logging
+import azure.functions as func
+from azure.cosmos import CosmosClient
+import os
+import uuid
 
-app = func.FunctionApp()
+def main(req: func.HttpRequest) -> func.HttpResponse:
+    logging.info("Processing CreateTask request")
 
-@app.route(route="CreateTask", auth_level=func.AuthLevel.ANONYMOUS)
-def CreateTask(req: func.HttpRequest) -> func.HttpResponse:
-    logging.info('Python HTTP trigger function processed a request.')
-
-    name = req.params.get('name')
-    if not name:
-        try:
-            req_body = req.get_json()
-        except ValueError:
-            pass
-        else:
-            name = req_body.get('name')
-
-    if name:
-        return func.HttpResponse(f"Hello, {name}. This HTTP triggered function executed successfully.")
-    else:
+    try:
+        body = req.get_json()
+    except ValueError:
         return func.HttpResponse(
-             "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.",
-             status_code=200
+            json.dumps({"error": "Invalid JSON"}),
+            status_code=400,
+            mimetype="application/json"
         )
+
+    title = body.get("title")
+    description = body.get("description")
+
+    if not title:
+        return func.HttpResponse(
+            json.dumps({"error": "Missing required field: title"}),
+            status_code=400,
+            mimetype="application/json"
+        )
+
+    # Generate unique ID
+    task_id = str(uuid.uuid4())
+
+    # Connect to Cosmos DB
+    cosmos_url = os.environ["COSMOS_DB_CONNECTION_STRING"]
+    database_name = os.environ["COSMOS_DB_DATABASE_NAME"]
+    container_name = os.environ["COSMOS_DB_CONTAINER_NAME"]
+
+    client = CosmosClient.from_connection_string(cosmos_url)
+    database = client.get_database_client(database_name)
+    container = database.get_container_client(container_name)
+
+    # Create item
+    item = {
+        "id": task_id,
+        "title": title,
+        "description": description,
+    }
+
+    container.create_item(item)
+
+    return func.HttpResponse(
+        json.dumps({"message": "Task created", "task": item}),
+        status_code=201,
+        mimetype="application/json"
+    )
