@@ -7,7 +7,7 @@
       "direction": "in",
       "name": "req",
       "methods": ["post"],
-      "route": "createtask"
+      "route": "tasks"
     },
     {
       "type": "http",
